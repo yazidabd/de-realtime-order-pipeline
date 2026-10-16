@@ -1,0 +1,53 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            producer/requirements.txt
+            consumer/requirements.txt
+            requirements-dev.txt
+      - name: Install dependencies
+        run: pip install -r producer/requirements.txt -r consumer/requirements.txt -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Syntax check
+        run: python -m compileall -q producer consumer spark infra
+      - name: Unit tests
+        run: python -m pytest tests -q
+
+  config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON files
+        run: |
+          python3 -m json.tool rabbitmq/definitions.json > /dev/null
+          python3 -m json.tool monitoring/grafana/dashboards/pipeline_overview.json > /dev/null
+      - name: Check shell script syntax
+        run: |
+          for script in infra/*.sh; do
+            bash -n "$script"
+          done
+      - name: Validate compose file
+        env:
+          RABBITMQ_USER: ci
+          RABBITMQ_PASSWORD: ci
+          MONGO_USER: ci
+          MONGO_PASSWORD: ci
+          MONGO_DB: ci
+          MONGO_REPLICA_KEY: ci
+          GRAFANA_ADMIN_USER: ci
+          GRAFANA_ADMIN_PASSWORD: ci
+        run: docker compose config -q

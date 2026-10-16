@@ -1,0 +1,6 @@
+# Aturan lint: error sintaks dan pyflakes (import tak terpakai, variabel tak terpakai, dan sejenisnya)
+target-version = "py310"
+extend-exclude = [".venv", "data"]
+
+[lint]
+select = ["E4", "E7", "E9", "F"]

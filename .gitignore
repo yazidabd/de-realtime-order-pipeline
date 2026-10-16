@@ -1,0 +1,28 @@
+# Secrets
+.env
+
+# Data lokal (dataset Olist, landing zone, checkpoint Spark)
+data/raw/
+data/landing/
+data/checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Spark dan Ivy cache
+.ivy2/
+spark-warehouse/
+metastore_db/
+
+# Editor dan OS
+.vscode/
+.idea/
+.DS_Store
+
+# Tetap commit file contoh env
+!.env.example
+.ruff_cache/
