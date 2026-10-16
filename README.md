@@ -54,7 +54,7 @@ bash infra/setup_rabbitmq_user.sh
 bash infra/create_s3_bucket.sh
 ```
 
-Tanpa S3_BUCKET_NAME, Parquet ditulis lokal ke data/checkpoints/local_lake.
+Tanpa S3_BUCKET_NAME, Parquet ditulis lokal ke data/checkpoints/local_lake. Bila Spark sudah pernah berjalan tanpa S3 lalu S3 diaktifkan, hapus data/checkpoints/lake_events dan data/checkpoints/lake_rejected (butuh sudo) lalu restart Spark, supaya data di landing zone ditulis ulang ke S3.
 
 6. Jalankan consumer, Spark, dan monitoring:
 
