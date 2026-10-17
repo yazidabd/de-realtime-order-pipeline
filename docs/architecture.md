@@ -35,6 +35,7 @@ flowchart LR
 | compact | Job batch: baca lake/events, dedup penuh per event_id, tulis lake/silver/events | Dijalankan manual lewat docker compose run, di produksi dijadwalkan orkestrator |
 | MongoDB | Serving: orders_current, stock_current, metrics_window, dan ledger processed_events | Single node replica set supaya transaksi tersedia |
 | Prometheus dan Grafana | Throughput queue, lag consumer, latency publish_time ke landing | Dashboard disediakan sebagai kode di monitoring/grafana |
+| CI | GitHub Actions: ruff, pytest, validasi JSON, sintaks shell, dan validasi compose pada tiap push | Runner ubuntu-24.04, workflow di .github/workflows/ci.yml |
 
 ## Semantik waktu
 
@@ -83,6 +84,7 @@ Kesimpulannya: efek di serving layer idempotent. Dokumen ini tidak mengklaim exa
 | Bronze berisi event yang diputar ulang setelah lewat watermark | Bronze 8630 baris dengan 5752 event_id unik (2878 duplikat). Compact menghasilkan silver 5752 baris, satu per event_id. |
 | Compact dijalankan dua kali | Jumlah objek silver tetap 22 dan ukurannya tetap 802431 byte, semua hitungan sama |
 | Load test 560000 event dalam lima tahap | 555705 masuk landing ditambah 4295 masuk DLQ sama dengan 560000. Ledger dan lake sama-sama 536341 event unik. Detail di docs/load-test.md |
+| Clone baru mengikuti README dari nol | Build image dari nol, init_env.sh, pengiriman 3000 event, dan angka akhir identik dengan run awal: 2984 landing, 16 DLQ, 2878 id valid, 480 order, 253 stok. Index MongoDB terbentuk saat start pertama, 4 dari 4 target Prometheus up, dashboard Grafana ter-provisioning, ruff dan 105 test lulus. Dijalankan di mesin yang sama dengan cache Docker, dan dataset disalin dari folder kerja |
 
 ## Keterbatasan yang diketahui
 
@@ -110,6 +112,6 @@ Kesimpulannya: efek di serving layer idempotent. Dokumen ini tidak mengklaim exa
 | Prometheus dan Grafana lokal | Monitoring terkelola dengan alerting |
 | Credential di .env | Secrets manager dan peran IAM |
 
-## Rencana lanjutan
+## Status dan rencana lanjutan
 
-CI untuk lint dan test. Hasil uji kegagalan ada di docs/failure-drills.md dan hasil load test ada di docs/load-test.md.
+CI (ruff, pytest, validasi JSON, sintaks shell, dan validasi compose) berjalan di GitHub Actions pada tiap push. Hasil uji kegagalan ada di docs/failure-drills.md dan hasil load test ada di docs/load-test.md. Yang belum dikerjakan: demo deploy di EC2, confirm producer asinkron, S3A committer untuk sink Parquet, dan kompaksi file kecil di bronze.
