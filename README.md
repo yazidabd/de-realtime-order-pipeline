@@ -1,6 +1,22 @@
 # de-realtime-order-pipeline
 
+[![ci](https://github.com/yazidabd/de-realtime-order-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/yazidabd/de-realtime-order-pipeline/actions/workflows/ci.yml)
+
 Pipeline streaming untuk event e-commerce. Dataset Olist diputar ulang sebagai stream, diproses lewat RabbitMQ dan Spark Structured Streaming, lalu disimpan ke data lake Parquet di S3 dan serving layer MongoDB, dengan monitoring Prometheus dan Grafana.
+
+## Hasil terukur
+
+Semua angka berasal dari run nyata di satu mesin (Spark local[2]), bukan klaim kapasitas produksi. Detail di docs.
+
+| Ukuran | Hasil | Rincian |
+|--------|-------|---------|
+| Uji beban lima tahap | 560000 event terkirim, 555705 masuk landing dan 4295 masuk DLQ, tidak ada yang hilang | docs/load-test.md |
+| Konsistensi | 536341 event unik, sama di ledger MongoDB dan data lake S3 | docs/load-test.md |
+| Kapasitas Spark | Sekitar 1800 event per detik, diukur dari pengurasan backlog | docs/load-test.md |
+| Ingress teramati | 352 event per detik dengan 4 producer, batas atas broker belum ditemukan | docs/load-test.md |
+| Latency sampai landing zone | 99 persen di bawah 2 detik pada beban sekitar 290 per detik | docs/load-test.md |
+| Uji kegagalan | 10 skenario (consumer, Spark, RabbitMQ, MongoDB dimatikan paksa dan lainnya), semuanya pulih dengan data konsisten | docs/failure-drills.md |
+| Uji clone baru | Mengikuti README dari nol menghasilkan angka yang identik, 105 test lulus | docs/architecture.md |
 
 ## Arsitektur
 
@@ -134,6 +150,15 @@ pip install -r producer/requirements.txt -r consumer/requirements.txt -r require
 ruff check .
 python -m pytest tests -q
 ```
+
+## Menghentikan
+
+```bash
+docker compose down
+docker compose down -v
+```
+
+Perintah pertama menghentikan semua service dan mempertahankan data. Perintah kedua juga menghapus semua volume. Untuk mengosongkan landing zone, checkpoint, MongoDB, dan prefix lake di S3 sekaligus, jalankan bash infra/reset_state.sh --yes (menghapus data, pakai hati-hati).
 
 ## Kredit dan lisensi data
 
